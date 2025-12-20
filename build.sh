@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # Variables
 cluster_name="cluster-1-test" # If you wanna change the cluster name make sure you change it in the terraform directory variables.tf (name_prefix & environment)
@@ -19,7 +21,7 @@ echo "--------------------Creating ECR--------------------"
 echo "--------------------Creating EBS--------------------"
 echo "--------------------Deploying Ingress--------------------"
 echo "--------------------Deploying Monitoring--------------------"
-cd terraform && \ 
+cd terraform
 terraform init
 terraform apply -auto-approve
 cd ..
