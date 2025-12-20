@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: go-app
-          image: AWS_ID.dkr.ecr.REGION.amazonaws.com/REPO_NAME:latest # Make sure to update the image name to match the build.sh script 
+          image: 302263041335.dkr.ecr.us-east-1.amazonaws.com/goapp-survey:latest # Updated to match `build.sh` image_name variable
           ports:
             - containerPort: 8080
           env:

@@ -40,11 +40,11 @@ variable "kube_monitoring_stack_values" {
         annotations:
           cert-manager.io/cluster-issuer: letsencrypt-production
         hosts:
-          - prometheus.YOUR_DOMAIN.com
+          - prometheus.tekamul.link
         tls:
           - secretName: prometheus-tls
             hosts:
-              - prometheus.YOUR_DOMAIN.com
+              - prometheus.tekamul.link
       prometheusSpec:
         replicas: 2
         replicaExternalLabelName: prometheus_replica

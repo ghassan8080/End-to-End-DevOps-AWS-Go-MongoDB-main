@@ -2,11 +2,11 @@
 
 # Variables
 cluster_name="cluster-1-test" # If you wanna change the cluster name make sure you change it in the terraform directory variables.tf (name_prefix & environment)
-region="YOUR_AWS_REGION"
-aws_id="YOUR_AWS_ACCOUNT_ID"
+region="us-east-1"
+aws_id="302263041335" # replace with your aws account id
 repo_name="goapp-survey" # If you wanna change the repository name make sure you change it in the k8s/app.yml (Image name) 
 image_name="$aws_id.dkr.ecr.$region.amazonaws.com/$repo_name:latest"
-domain="YOUR_DOMAIN"
+domain="tekamul.link" # replace with your domain name
 namespace="go-survey" # you can keep this variable or if you will change it remember to change the namespace in k8 manifests inside k8s directory
 # End of Variables
 
