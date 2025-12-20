@@ -70,12 +70,12 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 21.0"
 
-  cluster_name                    = local.cluster_name
-  cluster_version                 = "1.27"
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access  = true
+  name                            = local.cluster_name
+  kubernetes_version              = "1.27"
+  endpoint_private_access         = true
+  endpoint_public_access          = true
 
-  cluster_addons = {
+  addons = {
     coredns = {
       resolve_conflicts = "OVERWRITE"
     }
@@ -95,7 +95,7 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   # Extend cluster security group rules
-  cluster_security_group_additional_rules = {
+  security_group_additional_rules = {
     ingress_nodes_8443_tcp = {
       description                = "Node groups to cluster API via port 8443"
       protocol                   = "tcp"
