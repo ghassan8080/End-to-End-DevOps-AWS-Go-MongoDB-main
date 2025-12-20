@@ -50,7 +50,7 @@ resource "aws_eip" "nat_gw_elastic_ip" {
 module "ebs_csi_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
 
-  role_name             = "${local.cluster_name}-ebs-csi"
+  name                  = "${local.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
