@@ -38,6 +38,11 @@ locals {
 
 # reserve Elastic IP to be used in our NAT gateway
 resource "aws_eip" "nat_gw_elastic_ip" {
+<<<<<<< HEAD
+=======
+  # 'vpc' argument removed to maintain compatibility with newer AWS provider versions
+
+>>>>>>> 7bfe6e6 (change by ai)
   tags = {
     Name        = "${local.cluster_name}-nat-eip"
     Terraform   = "true"
@@ -69,7 +74,7 @@ module "eks" {
   version = "~> 21.0"
 
   name                            = local.cluster_name
-  kubernetes_version              = "1.27"
+  kubernetes_version              = "1.29"
   endpoint_private_access         = true
   endpoint_public_access          = true
 
@@ -81,7 +86,7 @@ module "eks" {
     vpc-cni = {
       resolve_conflicts = "OVERWRITE"
     }
-    aws-ebs-csi-driver = {
+      aws-ebs-csi-driver = {
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = module.ebs_csi_irsa_role.arn
     }
@@ -126,14 +131,19 @@ module "eks" {
   }
 
   # EKS Managed Node Group(s)
+<<<<<<< HEAD
   # Note: some module versions do not support a global
   # `eks_managed_node_group_defaults` argument. Set per-node-group
   # options instead to maintain compatibility.
+=======
+
+>>>>>>> 7bfe6e6 (change by ai)
   eks_managed_node_groups = {
     system = {
       min_size     = 1
       max_size     = 3
       desired_size = 1
+      ami_type     = "AL2_x86_64"
 
       instance_types = var.asg_sys_instance_types
       ami_type       = "AL2_x86_64"
