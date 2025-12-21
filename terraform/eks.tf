@@ -38,11 +38,6 @@ locals {
 
 # reserve Elastic IP to be used in our NAT gateway
 resource "aws_eip" "nat_gw_elastic_ip" {
-<<<<<<< HEAD
-=======
-  # 'vpc' argument removed to maintain compatibility with newer AWS provider versions
-
->>>>>>> 7bfe6e6 (change by ai)
   tags = {
     Name        = "${local.cluster_name}-nat-eip"
     Terraform   = "true"
@@ -131,13 +126,6 @@ module "eks" {
   }
 
   # EKS Managed Node Group(s)
-<<<<<<< HEAD
-  # Note: some module versions do not support a global
-  # `eks_managed_node_group_defaults` argument. Set per-node-group
-  # options instead to maintain compatibility.
-=======
-
->>>>>>> 7bfe6e6 (change by ai)
   eks_managed_node_groups = {
     system = {
       min_size     = 1
