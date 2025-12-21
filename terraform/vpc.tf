@@ -1,6 +1,6 @@
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  # Use vendored local module (patched) to avoid provider-incompatible registry code
+  source = "./modules/vpc"
 
   name = "${local.cluster_name}-vpc"
   cidr = var.main_network_block

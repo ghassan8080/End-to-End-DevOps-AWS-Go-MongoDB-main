@@ -12,8 +12,28 @@ domain="tekamul.link" # replace with your domain name
 namespace="go-survey" # you can keep this variable or if you will change it remember to change the namespace in k8 manifests inside k8s directory
 # End of Variables
 
-# update helm repos
+# ensure helm is available and at least one repo exists, then update
+if ! command -v helm >/dev/null 2>&1; then
+	echo "ERROR: helm not found in PATH. Install helm and retry."
+	exit 1
+fi
+
+echo "Checking Helm repositories..."
+repos=$(helm repo list -o yaml 2>/dev/null || true)
+if [ -z "${repos}" ]; then
+	echo "No Helm repositories configured — adding bitnami as fallback."
+	helm repo add bitnami https://charts.bitnami.com/bitnami
+fi
+
+echo "Updating Helm repositories (non-fatal)..."
+# run `helm repo update` but don't let it abort the whole script on failure
+set +e
 helm repo update
+rc=$?
+set -e
+if [ "$rc" -ne 0 ]; then
+	echo "WARNING: 'helm repo update' failed with exit code $rc — continuing without updated charts."
+fi
 
 # build the infrastructure
 echo "--------------------Creating EKS--------------------"
