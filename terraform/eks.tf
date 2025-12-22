@@ -69,7 +69,7 @@ module "eks" {
   version = "20.24.0"
 
   name                            = local.cluster_name
-  kubernetes_version              = "1.29"
+  kubernetes_version              = "1.30"
   endpoint_private_access         = true
   endpoint_public_access          = true
 
@@ -163,7 +163,7 @@ module "eks_auth" {
 # Create IAM role + automatically make it available to cluster autoscaler service account
 module "iam_assumable_role_admin" {
   source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
-  version                       = "~> 4.0"
+  version                       = "~> 5.0"
   create_role                   = true
   role_name                     = "${local.cluster_name}-cluster-autoscaler"
   provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
