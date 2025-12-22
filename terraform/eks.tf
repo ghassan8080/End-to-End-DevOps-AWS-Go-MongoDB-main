@@ -66,7 +66,7 @@ module "ebs_csi_irsa_role" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.24.0"
+  version = "19.21.0"
 
   name                            = local.cluster_name
   kubernetes_version              = "1.30"
@@ -81,7 +81,7 @@ module "eks" {
     vpc-cni = {
       resolve_conflicts = "OVERWRITE"
     }
-      aws-ebs-csi-driver = {
+    aws-ebs-csi-driver = {
       resolve_conflicts        = "OVERWRITE"
       service_account_role_arn = module.ebs_csi_irsa_role.arn
     }
