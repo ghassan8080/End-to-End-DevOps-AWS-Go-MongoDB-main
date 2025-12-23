@@ -46,7 +46,8 @@ resource "aws_eip" "nat_gw_elastic_ip" {
 }
 
 module "ebs_csi_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
+  source = "terraform-aws-modules/iam/aws"
+  version = "6.2.3"
 
   name                  = "${local.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
@@ -161,8 +162,8 @@ module "eks_auth" {
 
 # Create IAM role + automatically make it available to cluster autoscaler service account
 module "iam_assumable_role_admin" {
-  source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
-  version                       = "~> 5.0"
+  source                        = "terraform-aws-modules/iam/aws"
+  version                       = "5.60.0"
   create_role                   = true
   role_name                     = "${local.cluster_name}-cluster-autoscaler"
   provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
