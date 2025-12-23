@@ -1,8 +1,7 @@
 # Make sure to update YOUR_DOMAIN to match the build.sh script
 
-variable "kube_monitoring_stack_values" {
-  type    = string
-  default = <<-EOF
+locals {
+  kube_monitoring_stack_values = <<-EOF
     grafana:
       adminUser: admin
       adminPassword: admin
@@ -98,5 +97,5 @@ resource "helm_release" "kube_monitoring_stack" {
 
   create_namespace = true
 
-  values = [var.kube_monitoring_stack_values]
+  values = [local.kube_monitoring_stack_values]
 }
