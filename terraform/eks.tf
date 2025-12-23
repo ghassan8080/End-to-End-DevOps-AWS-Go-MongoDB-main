@@ -66,7 +66,7 @@ module "ebs_csi_irsa_role" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.21.0"
+  version = "20.0.0"
 
   name                            = local.cluster_name
   kubernetes_version              = "1.30"
@@ -134,7 +134,6 @@ module "eks" {
       ami_type     = "AL2_x86_64"
 
       instance_types = var.asg_sys_instance_types
-      ami_type       = "AL2_x86_64"
 
       labels = {
         Environment = "test"

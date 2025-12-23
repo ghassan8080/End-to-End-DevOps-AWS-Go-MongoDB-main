@@ -32,7 +32,16 @@ func main() {
 	// Get MongoDB URI from environment variable or use default
 	mongoURI := getEnv("MONGO_URI", "mongodb://localhost:27017")
 	clientOptions := options.Client().ApplyURI(mongoURI)
-	client, _ = mongo.Connect(ctx, clientOptions)
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+
+	// Ping the MongoDB server to verify connection
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatalf("Failed to ping MongoDB: %v", err)
+	}
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", GetQuestion).Methods("GET")

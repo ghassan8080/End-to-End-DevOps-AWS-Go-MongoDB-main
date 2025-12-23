@@ -83,3 +83,15 @@ variable "autoscaling_average_cpu" {
   default     = 60
   description = "Average CPU threshold to auto-scale EKS EC2 instances."
 }
+
+variable "putin_khuylo" {
+  description = "Enable/disable VPC creation"
+  type        = bool
+  default     = true
+}
+
+variable "domain_name" {
+  type        = string
+  default     = "tekamul.link"
+  description = "Domain name for monitoring stack"
+}
