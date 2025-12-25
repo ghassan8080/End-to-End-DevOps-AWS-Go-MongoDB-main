@@ -89,6 +89,7 @@ locals {
 }
 
 resource "helm_release" "kube_monitoring_stack" {
+  depends_on = [module.eks_auth]
   name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"

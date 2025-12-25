@@ -1,12 +1,13 @@
-data "aws_availability_zones" "available" {}
 
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
+
+data "aws_availability_zones" "available" {
+  filter {
+    name   = "zone-type"
+    values = ["availability-zone"]
+  }
 }
 
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
-}
+
 
 data "aws_caller_identity" "current" {} # used for accessing Account ID and ARN
 
@@ -46,10 +47,9 @@ resource "aws_eip" "nat_gw_elastic_ip" {
 }
 
 module "ebs_csi_irsa_role" {
-  source = "terraform-aws-modules/iam/aws"
-  version = "6.2.3"
+  source = "./modules/iam/modules/iam-role-for-service-accounts"
 
-  name                  = "${local.cluster_name}-ebs-csi"
+  name = "${local.cluster_name}-ebs-csi-"
   attach_ebs_csi_policy = true
 
   oidc_providers = {
@@ -66,27 +66,12 @@ module "ebs_csi_irsa_role" {
 }
 
 module "eks" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "20.0.0"
+  source  = "./modules/eks"
 
-  name                            = local.cluster_name
-  kubernetes_version              = "1.30"
-  endpoint_private_access         = true
-  endpoint_public_access          = true
-
-  addons = {
-    coredns = {
-      resolve_conflicts = "OVERWRITE"
-    }
-    kube-proxy = {}
-    vpc-cni = {
-      resolve_conflicts = "OVERWRITE"
-    }
-    aws-ebs-csi-driver = {
-      resolve_conflicts        = "OVERWRITE"
-      service_account_role_arn = module.ebs_csi_irsa_role.arn
-    }
-  }
+  cluster_name                   = local.cluster_name
+  cluster_version                = "1.30"
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
 
   create_cloudwatch_log_group = false
 
@@ -94,7 +79,7 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   # Extend cluster security group rules
-  security_group_additional_rules = {
+  cluster_security_group_additional_rules = {
     ingress_nodes_8443_tcp = {
       description                = "Node groups to cluster API via port 8443"
       protocol                   = "tcp"
@@ -152,9 +137,22 @@ module "eks" {
   }
 }
 
+resource "time_sleep" "wait_for_cluster" {
+  depends_on = [module.eks]
+
+  create_duration = "3m"
+}
+
 module "eks_auth" {
-  source = "aidanmelen/eks-auth/aws"
-  eks    = module.eks
+  source = "./modules/eks-auth"
+  depends_on = [time_sleep.wait_for_cluster]
+
+  providers = {
+    kubernetes = kubernetes
+  }
+
+  eks        = module.eks
+  aws_region = var.region
 
   # map developer & admin ARNs as kubernetes Users
   map_users = concat(local.admin_user_map_users, local.developer_user_map_users)
@@ -162,13 +160,17 @@ module "eks_auth" {
 
 # Create IAM role + automatically make it available to cluster autoscaler service account
 module "iam_assumable_role_admin" {
-  source                        = "terraform-aws-modules/iam/aws"
-  version                       = "5.60.0"
-  create_role                   = true
-  role_name                     = "${local.cluster_name}-cluster-autoscaler"
-  provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
-  role_policy_arns              = [aws_iam_policy.cluster_autoscaler.arn]
-  oidc_fully_qualified_subjects = ["system:serviceaccount:${local.autoscaler_service_account_namespace}:${local.autoscaler_service_account_name}"]
+  source                        = "./modules/iam/modules/iam-role-for-service-accounts"
+  name                          = "${local.cluster_name}-cluster-autoscaler"
+  policies                      = {
+    "cluster_autoscaler_policy" = aws_iam_policy.cluster_autoscaler.arn
+  }
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["${local.autoscaler_service_account_namespace}:${local.autoscaler_service_account_name}"]
+    }
+  }
 
   tags = {
     Owner           = split("/", data.aws_caller_identity.current.arn)[1]
@@ -225,6 +227,7 @@ data "aws_iam_policy_document" "cluster_autoscaler" {
 }
 
 resource "helm_release" "cluster-autoscaler" {
+  depends_on = [module.eks_auth]
   name             = "cluster-autoscaler"
   namespace        = local.autoscaler_service_account_namespace
   repository       = "https://kubernetes.github.io/autoscaler"
@@ -254,7 +257,7 @@ resource "helm_release" "cluster-autoscaler" {
 
   set {
     name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.iam_assumable_role_admin.iam_role_arn
+    value = module.iam_assumable_role_admin.arn
   }
 
   set {

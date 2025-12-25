@@ -42,13 +42,14 @@ echo "--------------------Creating EBS--------------------"
 echo "--------------------Deploying Ingress--------------------"
 echo "--------------------Deploying Monitoring--------------------"
 cd terraform
-terraform init
-terraform apply -auto-approve
-cd ..
+TF_REGISTRY_CLIENT_TIMEOUT=300 terraform init -upgrade
 
-# update kubeconfig
+# update kubeconfig - moved before terraform apply to ensure proper authentication
 echo "--------------------Update Kubeconfig--------------------"
 aws eks update-kubeconfig --name $cluster_name --region $region
+
+terraform apply -auto-approve
+cd ..
 
 # remove preious docker images
 echo "--------------------Remove Previous build--------------------"

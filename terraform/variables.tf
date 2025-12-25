@@ -1,11 +1,11 @@
 variable "aws_access_key" {
-  type    = string
-  default = ""
+  type        = string
+  description = "AWS access key. It is recommended to set this via environment variables."
 }
 
 variable "aws_secret_key" {
-  type    = string
-  default = ""
+  type        = string
+  description = "AWS secret key. It is recommended to set this via environment variables."
 }
 
 variable "name_prefix" {
@@ -82,12 +82,6 @@ variable "autoscaling_average_cpu" {
   type        = number
   default     = 60
   description = "Average CPU threshold to auto-scale EKS EC2 instances."
-}
-
-variable "putin_khuylo" {
-  description = "Enable/disable VPC creation"
-  type        = bool
-  default     = true
 }
 
 variable "domain_name" {
