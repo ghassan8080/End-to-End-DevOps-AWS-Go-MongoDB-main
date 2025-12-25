@@ -89,12 +89,14 @@ locals {
 }
 
 resource "helm_release" "kube_monitoring_stack" {
-  depends_on = [module.eks_auth]
+  depends_on = [module.eks_aws_auth]
   name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
   namespace  = "monitoring"
   version    = "45.29.0"
+  replace    = true
+  force_update = true
 
   create_namespace = true
 

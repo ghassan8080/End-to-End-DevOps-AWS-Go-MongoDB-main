@@ -117,7 +117,7 @@ module "eks" {
       min_size     = 1
       max_size     = 3
       desired_size = 1
-      ami_type     = "AL2_x86_64"
+      ami_type     = "BOTTLEROCKET_x86_64"
 
       instance_types = var.asg_sys_instance_types
 
@@ -135,27 +135,15 @@ module "eks" {
     Terraform   = "true"
     Environment = "test"
   }
+  enable_cluster_creator_admin_permissions = true
 }
 
-resource "time_sleep" "wait_for_cluster" {
-  depends_on = [module.eks]
+# Manage aws-auth configmap
+module "eks_aws_auth" {
+  source = "./modules/eks/modules/aws-auth"
 
-  create_duration = "3m"
-}
-
-module "eks_auth" {
-  source = "./modules/eks-auth"
-  depends_on = [time_sleep.wait_for_cluster]
-
-  providers = {
-    kubernetes = kubernetes
-  }
-
-  eks        = module.eks
-  aws_region = var.region
-
-  # map developer & admin ARNs as kubernetes Users
-  map_users = concat(local.admin_user_map_users, local.developer_user_map_users)
+  manage_aws_auth_configmap = true
+  aws_auth_users            = concat(local.admin_user_map_users, local.developer_user_map_users)
 }
 
 # Create IAM role + automatically make it available to cluster autoscaler service account
@@ -227,12 +215,12 @@ data "aws_iam_policy_document" "cluster_autoscaler" {
 }
 
 resource "helm_release" "cluster-autoscaler" {
-  depends_on = [module.eks_auth]
+  depends_on = [module.eks_aws_auth]
   name             = "cluster-autoscaler"
   namespace        = local.autoscaler_service_account_namespace
   repository       = "https://kubernetes.github.io/autoscaler"
   chart            = "cluster-autoscaler"
-  version          = "9.10.7"
+  version          = "9.36.0"
   create_namespace = false
 
   set {

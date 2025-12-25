@@ -49,12 +49,12 @@ resource "helm_release" "nginx_ingress" {
   name             = "nginx-ingress"
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
-  version          = "4.2.3"
+  version          = "4.10.1"
   cleanup_on_fail  = true
   namespace        = "ingress-nginx"
   create_namespace = true
 
   values = [var.nginx_ingress_values]
 
-  depends_on = [module.eks.cluster_id, module.eks_auth]
+  depends_on = [module.eks.cluster_id, module.eks_aws_auth]
 }
