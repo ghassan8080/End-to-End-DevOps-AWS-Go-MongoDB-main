@@ -67,8 +67,15 @@ func GetQuestion(w http.ResponseWriter, r *http.Request) {
 
 // Answer 1
 func SubmitAnswer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var answer Answer
-	_ = json.NewDecoder(r.Body).Decode(&answer)
+	if err := json.NewDecoder(r.Body).Decode(&answer); err != nil {
+		log.Printf("Error decoding request body: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		return
+	}
 
 	log.Printf("answer.Answer_1: %v", answer.Answer_1)
 	log.Printf("answer.Answer_2: %v", answer.Answer_2)
@@ -80,8 +87,12 @@ func SubmitAnswer(w http.ResponseWriter, r *http.Request) {
 
 	result, err := collection.InsertOne(ctx, bson.M{"Answer1": answer.Answer_1, "Answer2": answer.Answer_2, "Answer3": answer.Answer_3})
 	if err != nil {
-		log.Fatalf("Error inserting answer: %v", err)
+		log.Printf("Error inserting answer: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to save answer"})
+		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(result.InsertedID)
 }
