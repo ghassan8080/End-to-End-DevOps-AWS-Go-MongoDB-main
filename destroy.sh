@@ -1,14 +1,20 @@
 #!/bin/bash
 namespace="go-survey"
 repo_name="goapp-survey"
+region="us-east-1"
+aws_id="302263041335"
 
 #ECR Login
 echo "--------------------Login to ECR--------------------"
 aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $aws_id.dkr.ecr.$region.amazonaws.com
 
-# delete Docker-img from ECR
+# delete all Docker images from ECR
 echo "--------------------Deleting ECR-IMG--------------------"
-aws ecr batch-delete-image --repository-name $repo_name --image-ids imageTag=latest
+# Get all image IDs and delete them
+IMAGE_IDS=$(aws ecr list-images --repository-name $repo_name --query 'imageIds[*]' --output json)
+if [ -n "$IMAGE_IDS" ] && [ "$IMAGE_IDS" != "[]" ]; then
+  aws ecr batch-delete-image --repository-name $repo_name --image-ids "$IMAGE_IDS"
+fi
 
 # delete deployment
 echo "--------------------Deleting Deployment--------------------"
