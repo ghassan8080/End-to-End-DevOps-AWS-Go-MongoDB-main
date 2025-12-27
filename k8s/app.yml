@@ -18,6 +18,7 @@ spec:
       containers:
         - name: go-app
           image: 302263041335.dkr.ecr.us-east-1.amazonaws.com/goapp-survey:latest # Updated to match `build.sh` image_name variable
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
