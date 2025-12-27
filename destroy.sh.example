@@ -1,0 +1,30 @@
+#!/bin/bash
+namespace="go-survey"
+repo_name="goapp-survey"
+region="YOUR_AWS_REGION" # e.g., us-east-1
+aws_id="YOUR_AWS_ACCOUNT_ID" # Replace with your AWS account ID
+
+#ECR Login
+echo "--------------------Login to ECR--------------------"
+aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $aws_id.dkr.ecr.$region.amazonaws.com
+
+# delete all Docker images from ECR
+echo "--------------------Deleting ECR-IMG--------------------"
+# Get all image IDs and delete them
+IMAGE_IDS=$(aws ecr list-images --repository-name $repo_name --query 'imageIds[*]' --output json)
+if [ -n "$IMAGE_IDS" ] && [ "$IMAGE_IDS" != "[]" ]; then
+  aws ecr batch-delete-image --repository-name $repo_name --image-ids "$IMAGE_IDS"
+fi
+
+# delete deployment
+echo "--------------------Deleting Deployment--------------------"
+kubectl delete -n $namespace -f k8s/
+
+# delete namespace
+echo "--------------------Deleting Namespace--------------------"
+kubectl delete ns $namespace
+
+# delete AWS resources
+echo "--------------------Deleting AWS Resources--------------------"
+cd terraform && \
+terraform destroy -auto-approve

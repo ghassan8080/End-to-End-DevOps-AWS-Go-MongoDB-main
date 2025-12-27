@@ -1,0 +1,24 @@
+content: |-
+  {{ .Header }}
+
+  ## Usage
+
+  Grant access to the AWS EKS cluster by adding `map_roles`, `map_user` or `map_accounts` to the `aws-auth` configmap.
+
+  ```hcl
+  {{ include "examples/complete/complete.tf.docs" }}
+  ```
+
+  Please see the [complete example](examples/complete) for more information.
+
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}

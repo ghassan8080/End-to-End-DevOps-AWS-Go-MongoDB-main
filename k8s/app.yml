@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: go-app
-          image: 302263041335.dkr.ecr.us-east-1.amazonaws.com/goapp-survey:latest # Updated to match `build.sh` image_name variable
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/YOUR_REPO_NAME:latest # Update with your ECR image URI
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -54,7 +54,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
 spec:
   rules:
-    - host: goapp.tekamul.link
+    - host: goapp.YOUR_DOMAIN.COM # Update with your domain
       http:
         paths:
           - path: /

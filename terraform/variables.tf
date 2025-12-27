@@ -16,7 +16,7 @@ variable "environment" {
 
 variable "admin_users" {
   type        = list(string)
-  default     = ["triple-a"]
+  default     = ["YOUR_ADMIN_USER"] # Update with your admin username
   description = "List of Kubernetes admins."
 }
 
@@ -76,6 +76,6 @@ variable "autoscaling_average_cpu" {
 
 variable "domain_name" {
   type        = string
-  default     = "tekamul.link"
+  default     = "YOUR_DOMAIN.COM" # Update with your domain
   description = "Domain name for monitoring stack"
 }

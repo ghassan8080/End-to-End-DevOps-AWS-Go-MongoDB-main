@@ -1,0 +1,103 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# Variables
+cluster_name="YOUR_EKS_CLUSTER_NAME" # If you want to change the cluster name, make sure you change it in the terraform directory variables.tf (name_prefix & environment)
+region="YOUR_AWS_REGION" # e.g., us-east-1
+aws_id="YOUR_AWS_ACCOUNT_ID" # Replace with your AWS account ID
+repo_name="goapp-survey" # If you want to change the repository name, make sure you change it in the k8s/app.yml (Image name)
+image_name="$aws_id.dkr.ecr.$region.amazonaws.com/$repo_name:latest"
+domain="YOUR_DOMAIN.COM" # Replace with your domain name
+namespace="go-survey" # You can keep this variable or if you will change it, remember to change the namespace in k8s manifests inside k8s directory
+# End of Variables
+
+# ensure helm is available and at least one repo exists, then update
+if ! command -v helm >/dev/null 2>&1; then
+	echo "ERROR: helm not found in PATH. Install helm and retry."
+	exit 1
+fi
+
+echo "Checking Helm repositories..."
+repos=$(helm repo list -o yaml 2>/dev/null || true)
+if [ -z "${repos}" ]; then
+	echo "No Helm repositories configured — adding bitnami as fallback."
+	helm repo add bitnami https://charts.bitnami.com/bitnami
+fi
+
+echo "Updating Helm repositories (non-fatal)..."
+# run `helm repo update` but don't let it abort the whole script on failure
+set +e
+helm repo update
+rc=$?
+set -e
+if [ "$rc" -ne 0 ]; then
+	echo "WARNING: 'helm repo update' failed with exit code $rc — continuing without updated charts."
+fi
+
+# build the infrastructure
+echo "--------------------Creating EKS--------------------"
+echo "--------------------Creating ECR--------------------"
+echo "--------------------Creating EBS--------------------"
+echo "--------------------Deploying Ingress--------------------"
+echo "--------------------Deploying Monitoring--------------------"
+cd terraform
+TF_REGISTRY_CLIENT_TIMEOUT=300 terraform init -upgrade
+
+# update kubeconfig - moved before terraform apply to ensure proper authentication
+echo "--------------------Update Kubeconfig--------------------"
+aws eks update-kubeconfig --name $cluster_name --region $region
+
+terraform apply -auto-approve
+cd ..
+
+# remove previous docker images
+echo "--------------------Remove Previous build--------------------"
+docker rmi -f $image_name || true
+
+# build new docker image with new tag
+echo "--------------------Build new Image--------------------"
+docker build -t $image_name ./Go-app/
+
+#ECR Login
+echo "--------------------Login to ECR--------------------"
+aws ecr get-login-password --region $region | docker login --username AWS --password-stdin $aws_id.dkr.ecr.$region.amazonaws.com
+
+# push the latest build to ECR
+echo "--------------------Pushing Docker Image--------------------"
+docker push $image_name
+
+# create namespace
+echo "--------------------creating Namespace--------------------"
+kubectl create ns $namespace || true
+
+# deploy app
+echo "--------------------Deploy App--------------------"
+kubectl apply -n $namespace -f k8s
+
+# Wait for application to be deployed
+echo "--------------------Wait for all pods to be running--------------------"
+sleep 60s
+
+# Get ingress URL
+echo "--------------------Ingress URL--------------------"
+kubectl get ingress go-app-ingress -n $namespace -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+echo " "
+echo " "
+echo "--------------------Application URL--------------------"
+echo "http://goapp.$domain"
+
+echo "--------------------Alertmanager URL--------------------"
+echo "http://alertmanager.$domain"
+echo " "
+
+echo "--------------------Prometheus URL--------------------"
+echo "http://prometheus.$domain"
+echo " "
+
+echo "--------------------Grafana URL--------------------"
+echo "http://grafana.$domain"
+echo " "
+echo " "
+
+echo -e "1. Navigate to your domain DNS management interface.\n2. Look for Zone Editor or DNS management.\n3. Add CNAME Record to your domain.\n4. In the name type domain for your application.\n5. In the CNAME Record paste the ingress URL."
